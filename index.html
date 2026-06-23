@@ -3319,7 +3319,7 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
     <div class="flex items-start justify-between">
       <div>
         <h2 class="text-lg font-bold flex items-center gap-2">🎨 Template Sertifikat</h2>
-        <p class="text-xs text-slate-500 mt-0.5">Upload 2 background untuk sertifikat. Pilih template aktif dan atur barcode. Posisi teks & QR Code bisa digeser, dan diperbesar/diperkecil dengan scroll + tahan Ctrl, langsung di preview.</p>
+        <p class="text-xs text-slate-500 mt-0.5">Upload 2 background untuk sertifikat. <span class="font-semibold text-blue-600">Template 1 otomatis dipakai untuk peserta Sriwijaya Air, Template 2 untuk NAM Air.</span> Posisi teks & QR Code bisa digeser, scroll + tahan Ctrl untuk resize.</p>
       </div>
       <span class="badge bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Admin Only</span>
     </div>
@@ -3327,7 +3327,7 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
       <div class="md:col-span-2 space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="text-xs font-semibold">Template 1 (PNG/JPG)</label>
+            <label class="text-xs font-semibold flex items-center gap-1">Template 1 (PNG/JPG) <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">✈ Sriwijaya Air</span></label>
             <input type="file" id="certTemplateInput1" accept="image/png,image/jpeg,image/webp" class="input mt-1">
             <div class="flex gap-1 mt-1">
               <button id="btnSaveTemplate1" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">💾 Simpan 1</button>
@@ -3335,7 +3335,7 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
             </div>
           </div>
           <div>
-            <label class="text-xs font-semibold">Template 2 (PNG/JPG)</label>
+            <label class="text-xs font-semibold flex items-center gap-1">Template 2 (PNG/JPG) <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700">✈ NAM Air</span></label>
             <input type="file" id="certTemplateInput2" accept="image/png,image/jpeg,image/webp" class="input mt-1">
             <div class="flex gap-1 mt-1">
               <button id="btnSaveTemplate2" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg">💾 Simpan 2</button>
@@ -3350,6 +3350,22 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
           </label>
           <button id="btnResetTemplate" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs font-semibold rounded-lg">♻️ Reset</button>
           <button id="btnDownloadTemplate" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg">⬇️ Download Aktif</button>
+        </div>
+
+        <!-- Airlines template status -->
+        <div class="flex flex-wrap gap-3 mt-1" id="airlinesTemplateStatus">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-xs">
+            <span class="font-bold text-blue-700 dark:text-blue-300">✈ Sriwijaya Air</span>
+            <span class="text-slate-500">→</span>
+            <span id="sjTemplateStatus" class="font-semibold text-blue-700 dark:text-blue-300">Template 1</span>
+            <span id="sjTemplateAvail" class="text-[10px] text-slate-400">(belum upload)</span>
+          </div>
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-xs">
+            <span class="font-bold text-red-700 dark:text-red-300">✈ NAM Air</span>
+            <span class="text-slate-500">→</span>
+            <span id="namTemplateStatus" class="font-semibold text-red-700 dark:text-red-300">Template 2</span>
+            <span id="namTemplateAvail" class="text-[10px] text-slate-400">(belum upload)</span>
+          </div>
         </div>
 
         <!-- ===== FONT CONTROLS PANEL ===== -->
@@ -7676,51 +7692,121 @@ function renderCertificate(p, prefix){
   const BARCODE_KEY = 'sjn_cert_barcode_v1';
   const POS_KEY = 'sjn_cert_positions_v1';
 
-  function getActiveTemplate(){
+  // Kembalikan data template berdasarkan airlines peserta:
+  //   airlines === 'nam'       → Template 2 (NAM Air)
+  //   airlines === 'sriwijaya' → Template 1 (Sriwijaya Air)
+  //   airlines === undefined   → ikuti pilihan TEMPLATE_ACTIVE (mode manual / default)
+  function getTemplateForAirlines(airlines){
+    if(airlines === 'nam'){
+      const d = JSON.parse(localStorage.getItem(TEMPLATE_KEY2) || 'null');
+      return { data: d, num: '2' };
+    }
+    if(airlines === 'sriwijaya'){
+      const d = JSON.parse(localStorage.getItem(TEMPLATE_KEY1) || 'null');
+      return { data: d, num: '1' };
+    }
+    // fallback: pakai TEMPLATE_ACTIVE (pilihan manual admin)
     const active = localStorage.getItem(TEMPLATE_ACTIVE) || '1';
-    const key = active === '2' ? TEMPLATE_KEY2 : TEMPLATE_KEY1;
-    return JSON.parse(localStorage.getItem(key) || 'null');
+    const key    = active === '2' ? TEMPLATE_KEY2 : TEMPLATE_KEY1;
+    return { data: JSON.parse(localStorage.getItem(key) || 'null'), num: active };
   }
 
-  function loadCertificateTemplate(){
-    const data = getActiveTemplate();
-    const previews = ['certReprintPreview','pesertaCertPreview'];
-    previews.forEach(id=>{
+  // Terapkan satu template ke satu preview container
+  function applyTemplateToEl(el, templateData){
+    if(!el) return;
+    if(templateData && templateData.dataUrl){
+      el.style.backgroundImage    = `url(${templateData.dataUrl})`;
+      el.style.backgroundSize     = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.backgroundRepeat   = 'no-repeat';
+      el.classList.remove('bg-gradient-to-br','from-blue-50','to-indigo-100','dark:from-slate-800','dark:to-slate-900');
+    } else {
+      el.style.backgroundImage = '';
+      if(!el.classList.contains('bg-gradient-to-br')){
+        el.classList.add('bg-gradient-to-br','from-blue-50','to-indigo-100','dark:from-slate-800','dark:to-slate-900');
+      }
+    }
+  }
+
+  // Muat template ke preview.
+  // opts.airlinesMap: { containerId: 'sriwijaya'|'nam'|null } — override per container
+  // Jika tidak ada, gunakan window.lastCertData.p.airlines untuk semua container.
+  function loadCertificateTemplate(opts){
+    opts = opts || {};
+    const airlinesMap = opts.airlinesMap || {};
+
+    // Deteksi airlines dari lastCertData jika tidak di-pass
+    const globalAirlines = (window.lastCertData && window.lastCertData.p)
+      ? window.lastCertData.p.airlines
+      : undefined;
+
+    // Daftar preview → terapkan template sesuai airlines masing-masing
+    const previewIds = ['certReprintPreview','pesertaCertPreview'];
+    previewIds.forEach(id => {
       const el = document.getElementById(id);
       if(!el) return;
-      if(data && data.dataUrl){
-        el.style.backgroundImage = `url(${data.dataUrl})`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
-        el.style.backgroundRepeat = 'no-repeat';
-        el.classList.remove('bg-gradient-to-br','from-blue-50','to-indigo-100','dark:from-slate-800','dark:to-slate-900');
-      } else {
-        el.style.backgroundImage = '';
-        if(!el.classList.contains('bg-gradient-to-br')){
-          el.classList.add('bg-gradient-to-br','from-blue-50','to-indigo-100','dark:from-slate-800','dark:to-slate-900');
-        }
-      }
+      const airlines = (id in airlinesMap) ? airlinesMap[id] : globalAirlines;
+      const { data } = getTemplateForAirlines(airlines);
+      applyTemplateToEl(el, data);
     });
-    // update preview box
+
+    // Update preview box (thumbnail Admin) — selalu pakai template aktif manual
     const prevImg = document.getElementById('templatePreviewImg');
     const prevBox = document.getElementById('templatePreviewBox');
-    const status = document.getElementById('templateStatus');
-    const active = localStorage.getItem(TEMPLATE_ACTIVE) || '1';
-    if(data && data.dataUrl && prevImg){
-      prevImg.src = data.dataUrl;
+    const status  = document.getElementById('templateStatus');
+    const active  = localStorage.getItem(TEMPLATE_ACTIVE) || '1';
+    const { data: adminData } = getTemplateForAirlines(undefined);
+    if(adminData && adminData.dataUrl && prevImg){
+      prevImg.src = adminData.dataUrl;
       prevImg.classList.remove('hidden');
       if(prevBox) prevBox.querySelector('span')?.classList.add('hidden');
-      if(status) status.textContent = `Status: Template ${active} aktif (disimpan ${new Date(data.savedAt).toLocaleString('id-ID')})`;
+      if(status) status.textContent = `Status: Template ${active} aktif (disimpan ${new Date(adminData.savedAt).toLocaleString('id-ID')})`;
     } else {
       if(prevImg) prevImg.classList.add('hidden');
       if(prevBox) prevBox.querySelector('span')?.classList.remove('hidden');
       if(status) status.textContent = 'Status: menggunakan background default.';
     }
-    // load barcode toggle (default ON kecuali sudah pernah dimatikan secara eksplisit)
+
+    // Update badge airlines pada UI sertifikat jika ada lastCertData
+    updateAirlinesBadge();
+
+    // Barcode toggle & positions
     const toggle = document.getElementById('toggleBarcode');
     if(toggle) toggle.checked = localStorage.getItem(BARCODE_KEY) !== '0';
-    // load positions
     loadPositions();
+    updateAirlinesTemplateStatus();
+  }
+
+  // Perbarui label status template per airlines di panel admin
+  function updateAirlinesTemplateStatus(){
+    const t1 = JSON.parse(localStorage.getItem(TEMPLATE_KEY1)||'null');
+    const t2 = JSON.parse(localStorage.getItem(TEMPLATE_KEY2)||'null');
+    const sjAvail  = document.getElementById('sjTemplateAvail');
+    const namAvail = document.getElementById('namTemplateAvail');
+    if(sjAvail)  sjAvail.textContent  = t1 ? `✅ tersedia (${new Date(t1.savedAt).toLocaleDateString('id-ID')})` : '⚠️ belum upload';
+    if(namAvail) namAvail.textContent = t2 ? `✅ tersedia (${new Date(t2.savedAt).toLocaleDateString('id-ID')})` : '⚠️ belum upload';
+  }
+
+  // Tampilkan badge di atas preview yang menunjukkan template mana yang dipakai
+  function updateAirlinesBadge(){
+    const p = window.lastCertData && window.lastCertData.p;
+    ['pesertaCertPreview','certReprintPreview'].forEach(containerId => {
+      const container = document.getElementById(containerId);
+      if(!container) return;
+      // Hapus badge lama
+      container.querySelectorAll('.cert-airlines-badge').forEach(b=>b.remove());
+      if(!p) return;
+      const airlines = p.airlines;
+      const isSj  = airlines === 'sriwijaya';
+      const isNam = airlines === 'nam';
+      if(!isSj && !isNam) return;
+      const badge = document.createElement('div');
+      badge.className = 'cert-airlines-badge';
+      badge.style.cssText = 'position:absolute;top:6px;right:8px;z-index:20;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;pointer-events:none;'
+        + (isSj ? 'background:rgba(37,99,235,0.85);color:#fff;' : 'background:rgba(220,38,38,0.85);color:#fff;');
+      badge.textContent = isSj ? '✈ Template 1 — Sriwijaya Air' : '✈ Template 2 — NAM Air';
+      container.appendChild(badge);
+    });
   }
 
   // hook ke renderCertificate (single consolidated wrapper)
@@ -7729,7 +7815,8 @@ function renderCertificate(p, prefix){
   window.renderCertificate = function(p, prefix){
     window.lastCertData = {p, prefix};
     const qrDone = _origRenderCertificate(p, prefix) || Promise.resolve();
-    setTimeout(loadCertificateTemplate, 10);
+    // Setelah render, muat template sesuai airlines peserta
+    setTimeout(()=> loadCertificateTemplate(), 10);
     return qrDone;
   };
 

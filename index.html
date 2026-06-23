@@ -3351,6 +3351,79 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
           <button id="btnResetTemplate" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-xs font-semibold rounded-lg">♻️ Reset</button>
           <button id="btnDownloadTemplate" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg">⬇️ Download Aktif</button>
         </div>
+
+        <!-- ===== FONT CONTROLS PANEL ===== -->
+        <div class="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
+          <p class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">🎨 Pengaturan Teks Sertifikat</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            <!-- Field selector -->
+            <div>
+              <label class="text-xs font-semibold text-slate-500">Pilih Field</label>
+              <select id="certFieldSelector" class="input mt-1 text-xs">
+                <option value="Name">Nama Peserta</option>
+                <option value="No">Nomor Sertifikat</option>
+                <option value="Validity">Masa Berlaku</option>
+              </select>
+            </div>
+
+            <!-- Font family -->
+            <div>
+              <label class="text-xs font-semibold text-slate-500">Jenis Font</label>
+              <select id="certFontFamily" class="input mt-1 text-xs">
+                <option value="Inter, sans-serif">Inter (Default)</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="'Courier New', monospace">Courier New</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="Tahoma, sans-serif">Tahoma</option>
+                <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                <option value="Impact, sans-serif">Impact</option>
+                <option value="'Palatino Linotype', serif">Palatino</option>
+              </select>
+            </div>
+
+            <!-- Font size -->
+            <div>
+              <label class="text-xs font-semibold text-slate-500">Ukuran Font: <span id="certFontSizeLabel">22</span>px</label>
+              <div class="flex items-center gap-2 mt-1">
+                <button id="btnFontDec" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-sm font-bold rounded-lg">−</button>
+                <input type="range" id="certFontSize" min="8" max="72" value="22" class="flex-1 accent-blue-600">
+                <button id="btnFontInc" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-sm font-bold rounded-lg">+</button>
+              </div>
+            </div>
+
+            <!-- Font color -->
+            <div>
+              <label class="text-xs font-semibold text-slate-500">Warna Font</label>
+              <div class="flex items-center gap-2 mt-1">
+                <input type="color" id="certFontColor" value="#000000" class="w-10 h-9 rounded cursor-pointer border border-slate-300">
+                <div class="flex flex-wrap gap-1">
+                  <button onclick="document.getElementById('certFontColor').value='#000000';applyFontStyle()" class="w-6 h-6 rounded-full bg-black border-2 border-white shadow" title="Hitam"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#ffffff';applyFontStyle()" class="w-6 h-6 rounded-full bg-white border-2 border-slate-300 shadow" title="Putih"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#1d4ed8';applyFontStyle()" class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:#1d4ed8" title="Biru"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#dc2626';applyFontStyle()" class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:#dc2626" title="Merah"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#ca8a04';applyFontStyle()" class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:#ca8a04" title="Kuning"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#15803d';applyFontStyle()" class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:#15803d" title="Hijau"></button>
+                  <button onclick="document.getElementById('certFontColor').value='#7c3aed';applyFontStyle()" class="w-6 h-6 rounded-full border-2 border-white shadow" style="background:#7c3aed" title="Ungu"></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Font style toggles -->
+            <div class="sm:col-span-2 flex flex-wrap gap-2">
+              <button id="btnFontBold" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs font-bold rounded-lg" title="Bold"><b>B</b></button>
+              <button id="btnFontItalic" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs italic rounded-lg" title="Italic"><i>I</i></button>
+              <button id="btnFontUnderline" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs underline rounded-lg" title="Underline">U</button>
+              <button id="btnFontAlignLeft" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs rounded-lg" title="Rata Kiri">⬅ Kiri</button>
+              <button id="btnFontAlignCenter" class="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg" title="Tengah">↔ Tengah</button>
+              <button id="btnFontAlignRight" class="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-xs rounded-lg" title="Rata Kanan">➡ Kanan</button>
+              <button id="btnResetFontField" class="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold rounded-lg ml-auto">↺ Reset Field</button>
+            </div>
+          </div>
+        </div>
+        <!-- ===== END FONT CONTROLS ===== -->
         <p id="templateStatus" class="text-xs text-slate-500">Status: belum ada template custom.</p>
       </div>
       <div>
@@ -7716,7 +7789,13 @@ function renderCertificate(p, prefix){
             fontSize: el.style.fontSize,
             width: el.style.width,
             height: el.style.height,
-            transform: el.style.transform
+            transform: el.style.transform,
+            color: el.style.color,
+            fontFamily: el.style.fontFamily,
+            fontWeight: el.style.fontWeight,
+            fontStyle: el.style.fontStyle,
+            textDecoration: el.style.textDecoration,
+            textAlign: el.style.textAlign
           };
         }
       });
@@ -7745,6 +7824,12 @@ function renderCertificate(p, prefix){
         if(pos[id].fontSize) el.style.fontSize = pos[id].fontSize;
         if(pos[id].width) el.style.width = pos[id].width;
         if(pos[id].height) el.style.height = pos[id].height;
+        if(pos[id].color) el.style.color = pos[id].color;
+        if(pos[id].fontFamily) el.style.fontFamily = pos[id].fontFamily;
+        if(pos[id].fontWeight) el.style.fontWeight = pos[id].fontWeight;
+        if(pos[id].fontStyle) el.style.fontStyle = pos[id].fontStyle;
+        if(pos[id].textDecoration) el.style.textDecoration = pos[id].textDecoration;
+        if(pos[id].textAlign) el.style.textAlign = pos[id].textAlign;
         // Jika posisi menggunakan % tanpa drag → pakai translate(-50%,-50%) untuk centering
         if(pos[id].transform) el.style.transform = pos[id].transform;
         else if(pos[id].left && pos[id].left.includes('%')) el.style.transform = 'translate(-50%,-50%)';
@@ -10056,6 +10141,157 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
     document.addEventListener('DOMContentLoaded', wireStcrExportButtons);
   } else {
     wireStcrExportButtons();
+  }
+})();
+
+// =================================================================
+// FONT CONTROLS — Pengaturan Teks Sertifikat
+// =================================================================
+(function(){
+  function getSelectedField(){
+    const sel = document.getElementById('certFieldSelector');
+    if(!sel) return null;
+    return sel.value; // 'Name', 'No', 'Validity'
+  }
+
+  function getFieldEls(fieldKey){
+    return [
+      document.getElementById('pesertaCert'+fieldKey),
+      document.getElementById('certReprint'+fieldKey)
+    ].filter(Boolean);
+  }
+
+  // Terapkan style dari panel ke elemen yang dipilih
+  window.applyFontStyle = function(){
+    const fieldKey = getSelectedField();
+    if(!fieldKey) return;
+    const els = getFieldEls(fieldKey);
+    const family = document.getElementById('certFontFamily')?.value || '';
+    const size   = document.getElementById('certFontSize')?.value || '16';
+    const color  = document.getElementById('certFontColor')?.value || '#000000';
+    els.forEach(el=>{
+      if(family) el.style.fontFamily = family;
+      el.style.fontSize = size + 'px';
+      el.style.color = color;
+    });
+    if(document.getElementById('certFontSizeLabel')) document.getElementById('certFontSizeLabel').textContent = size;
+    if(typeof savePositions === 'function') savePositions();
+  };
+
+  // Sync panel dengan nilai field yang dipilih
+  function syncPanelToField(){
+    const fieldKey = getSelectedField();
+    if(!fieldKey) return;
+    const el = document.getElementById('pesertaCert'+fieldKey) || document.getElementById('certReprint'+fieldKey);
+    if(!el) return;
+    const cs = window.getComputedStyle(el);
+    const fs = parseFloat(el.style.fontSize || cs.fontSize) || 16;
+    if(document.getElementById('certFontSize')) document.getElementById('certFontSize').value = Math.round(fs);
+    if(document.getElementById('certFontSizeLabel')) document.getElementById('certFontSizeLabel').textContent = Math.round(fs);
+    if(el.style.color && document.getElementById('certFontColor')){
+      // Konversi rgb ke hex jika perlu
+      let c = el.style.color;
+      if(c.startsWith('rgb')){
+        const m = c.match(/\d+/g);
+        if(m && m.length>=3) c = '#'+[m[0],m[1],m[2]].map(x=>parseInt(x).toString(16).padStart(2,'0')).join('');
+      }
+      document.getElementById('certFontColor').value = c || '#000000';
+    }
+    if(el.style.fontFamily && document.getElementById('certFontFamily')){
+      const ff = document.getElementById('certFontFamily');
+      // cari opsi yang paling cocok
+      for(let opt of ff.options){ if(el.style.fontFamily.includes(opt.value.replace(/['"]/g,'').split(',')[0].trim())){ ff.value = opt.value; break; } }
+    }
+    // Bold / italic / underline
+    const bold = (el.style.fontWeight === 'bold' || el.style.fontWeight >= 700);
+    const italic = el.style.fontStyle === 'italic';
+    const underline = (el.style.textDecoration||'').includes('underline');
+    document.getElementById('btnFontBold')?.classList.toggle('bg-blue-200', bold);
+    document.getElementById('btnFontItalic')?.classList.toggle('bg-blue-200', italic);
+    document.getElementById('btnFontUnderline')?.classList.toggle('bg-blue-200', underline);
+    // Align
+    const align = el.style.textAlign || 'center';
+    ['Left','Center','Right'].forEach(a=>{
+      const btn = document.getElementById('btnFontAlign'+a);
+      if(btn){ btn.className = btn.className.replace(/bg-blue-100[^\s]*/g,'').replace(/text-blue-700[^\s]*/g,'').trim(); }
+    });
+    const activeAlignBtn = document.getElementById('btnFontAlign'+align.charAt(0).toUpperCase()+align.slice(1));
+    if(activeAlignBtn) activeAlignBtn.classList.add('bg-blue-100','text-blue-700','font-semibold');
+  }
+
+  function toggleStyle(prop, valOn, valOff){
+    const fieldKey = getSelectedField();
+    if(!fieldKey) return;
+    const els = getFieldEls(fieldKey);
+    const current = els[0]?.style[prop] || '';
+    const newVal = (current === valOn) ? valOff : valOn;
+    els.forEach(el=> el.style[prop] = newVal);
+    syncPanelToField();
+    if(typeof savePositions === 'function') savePositions();
+  }
+
+  function setAlign(align){
+    const fieldKey = getSelectedField();
+    if(!fieldKey) return;
+    getFieldEls(fieldKey).forEach(el=> el.style.textAlign = align);
+    syncPanelToField();
+    if(typeof savePositions === 'function') savePositions();
+  }
+
+  function init(){
+    const fieldSel = document.getElementById('certFieldSelector');
+    if(fieldSel) fieldSel.addEventListener('change', syncPanelToField);
+
+    const fontFamily = document.getElementById('certFontFamily');
+    if(fontFamily) fontFamily.addEventListener('change', applyFontStyle);
+
+    const fontSizeSlider = document.getElementById('certFontSize');
+    if(fontSizeSlider) fontSizeSlider.addEventListener('input', applyFontStyle);
+
+    const fontColor = document.getElementById('certFontColor');
+    if(fontColor) fontColor.addEventListener('input', applyFontStyle);
+
+    document.getElementById('btnFontInc')?.addEventListener('click', ()=>{
+      const s = document.getElementById('certFontSize');
+      if(s){ s.value = Math.min(72, parseInt(s.value)+1); applyFontStyle(); }
+    });
+    document.getElementById('btnFontDec')?.addEventListener('click', ()=>{
+      const s = document.getElementById('certFontSize');
+      if(s){ s.value = Math.max(8, parseInt(s.value)-1); applyFontStyle(); }
+    });
+
+    document.getElementById('btnFontBold')?.addEventListener('click', ()=> toggleStyle('fontWeight','bold','normal'));
+    document.getElementById('btnFontItalic')?.addEventListener('click', ()=> toggleStyle('fontStyle','italic','normal'));
+    document.getElementById('btnFontUnderline')?.addEventListener('click', ()=> toggleStyle('textDecoration','underline','none'));
+
+    document.getElementById('btnFontAlignLeft')?.addEventListener('click', ()=> setAlign('left'));
+    document.getElementById('btnFontAlignCenter')?.addEventListener('click', ()=> setAlign('center'));
+    document.getElementById('btnFontAlignRight')?.addEventListener('click', ()=> setAlign('right'));
+
+    document.getElementById('btnResetFontField')?.addEventListener('click', ()=>{
+      const fieldKey = getSelectedField();
+      if(!fieldKey) return;
+      const defaults = {
+        Name: {fontSize:'22px', color:'#000000', fontFamily:'', fontWeight:'bold', fontStyle:'normal', textDecoration:'none', textAlign:'center'},
+        No:   {fontSize:'13px', color:'#000000', fontFamily:'', fontWeight:'normal', fontStyle:'normal', textDecoration:'none', textAlign:'center'},
+        Validity: {fontSize:'12px', color:'#000000', fontFamily:'', fontWeight:'normal', fontStyle:'normal', textDecoration:'none', textAlign:'center'}
+      };
+      const d = defaults[fieldKey] || defaults.Name;
+      getFieldEls(fieldKey).forEach(el=>{
+        Object.keys(d).forEach(k=> el.style[k] = d[k]);
+      });
+      syncPanelToField();
+      if(typeof savePositions === 'function') savePositions();
+    });
+
+    // Sync panel saat pertama kali
+    setTimeout(syncPanelToField, 600);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    setTimeout(init, 200);
   }
 })();
 

@@ -866,6 +866,12 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">OCL</th>
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">Kat.</th>
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">Approval</th>
+            <th class="px-2 py-2.5 font-semibold text-xs uppercase">
+              <span class="group relative inline-flex items-center gap-1 cursor-help" title="Verifikasi otomatis mengikuti status Approval: Yes jika Approved, No jika belum">
+                Verifikasi
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              </span>
+            </th>
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">Pax</th>
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">Cost</th>
             <th class="px-2 py-2.5 font-semibold text-xs uppercase">Ket.</th>
@@ -2625,13 +2631,13 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
         <h2 class="text-lg font-bold text-slate-800 dark:text-white">🏥 Stretchercase & POB — Dashboard</h2>
         <p class="text-xs text-slate-500 dark:text-slate-400">Sriwijaya Air & NAM Air — Medical Assistance Management</p>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap no-print">
         <span class="stcr-total-badge" id="stcrTotalBadge">Loading...</span>
         <button id="btnStcrDashExportExcel" class="stcr-btn stcr-btn-primary" style="background:#16a34a;display:flex;align-items:center;gap:5px;font-size:12px;padding:6px 12px">📗 Export Excel</button>
         <button id="btnStcrDashExportPdf" class="stcr-btn stcr-btn-primary" style="background:#dc2626;display:flex;align-items:center;gap:5px;font-size:12px;padding:6px 12px">📕 Export PDF</button>
       </div>
     </div>
-    <div class="stcr-filters">
+    <div class="stcr-filters no-print">
       <div class="stcr-filter-group"><label>Tahun</label>
         <select id="stcr-f-year" onchange="STCR.applyFilters()">
           <option value="">Semua</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
@@ -2765,7 +2771,7 @@ body { background: radial-gradient(ellipse at top, #0f172a 0%, #020617 100%); }
       <div>
         <h2 class="text-lg font-bold text-slate-800 dark:text-white">📍 Stretchercase & POB — Per Stasiun</h2>
       </div>
-      <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap no-print">
         <select id="stcr-st-year" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text);background:#fff;" onchange="STCR.renderStation()">
           <option value="">Semua Tahun</option><option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
         </select>
@@ -4344,6 +4350,10 @@ function renderTable(){
     const delayColor=d.delayMenit>=240?'bg-red-200 text-red-800 dark:bg-red-900/50 dark:text-red-200':d.delayMenit>0?'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300':'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
     const katColor=katColors[d.kategori]||'bg-slate-100 text-slate-700';
     const apColor=d.approval==='Approved'?'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300':d.approval==='On-Process'?'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300':'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+    // Verifikasi: Yes jika sudah Approved, No jika belum (On-Process / Not-Approved)
+    const isVerified = d.approval==='Approved';
+    const verifLabel = isVerified ? 'Yes' : 'No';
+    const verifColor = isVerified ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
     const sColor=statusColor[d.flightStatus]||'status-delay';
     const costVal=(d.qtyPax||0)*(d.costPerPax||settings.costPerPax||300000);
     // OCL local time conversion
@@ -4386,6 +4396,7 @@ function renderTable(){
       <td class="px-2 py-2 font-mono text-xs">${oclDisplay}</td>
       <td class="px-2 py-2"><span class="badge ${katColor}">${d.kategori}</span></td>
       <td class="px-2 py-2"><span class="badge ${apColor}">${d.approval||'Not-Approved'}</span></td>
+      <td class="px-2 py-2"><span class="badge ${verifColor}">${verifLabel}</span></td>
       <td class="px-2 py-2 text-center"><input type="number" min="0" value="${d.qtyPax||0}" data-qty-id="${d.id}" class="qty-input text-xs" ${window.currentUserReadOnly?'disabled readonly style="opacity:0.5;cursor:not-allowed"':''}></td>
       <td class="px-2 py-2 text-right text-xs font-medium text-purple-700 dark:text-purple-300">${formatRupiah(costVal)}</td>
       <td class="px-2 py-2 max-w-[120px] truncate text-xs text-slate-500" title="${d.keterangan||''}">${d.keterangan||'-'}</td>
@@ -4404,6 +4415,9 @@ function renderTable(){
       const etdInfo=formatTimeLocal(d.etdUtc,origin);
       const delayColor=d.delayMenit>0?'text-red-600':'text-emerald-600';
       const sColor=statusColor[d.flightStatus]||'status-delay';
+      const isVerifiedM = d.approval==='Approved';
+      const verifLabelM = isVerifiedM ? 'Yes' : 'No';
+      const verifColorM = isVerifiedM ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300';
       return `<div class="card p-4 rounded-xl">
         <div class="flex items-start justify-between mb-2">
           <div>
@@ -4417,7 +4431,10 @@ function renderTable(){
           <div>STD ${stdInfo.utc} → ETD ${etdInfo.utc} <span class="text-slate-400">(UTC+${stdInfo.tz})</span></div>
         </div>
         <div class="flex items-center justify-between mt-2">
-          <span class="flight-status-badge ${sColor}">${d.flightStatus||'Delay'}</span>
+          <div class="flex items-center gap-1.5">
+            <span class="flight-status-badge ${sColor}">${d.flightStatus||'Delay'}</span>
+            <span class="badge ${verifColorM}" title="Verifikasi">✓ ${verifLabelM}</span>
+          </div>
           <div class="flex gap-2">
             ${window.currentUserReadOnly ? '' : `<button data-edit="${d.id}" class="text-blue-600 text-xs font-semibold">Edit</button><button data-del="${d.id}" class="text-red-600 text-xs font-semibold">Hapus</button>`}
           </div>
@@ -4516,6 +4533,7 @@ $('#btnExportExcel').addEventListener('click',()=>{
       Delay_Menit:d.delayMenit, Delay_HH_MM:formatHM(d.delayMenit),
       Flight_Status:d.flightStatus||'Delay Flight',
       Kategori:d.kategori, Approval:d.approval||'Not-Approved',
+      Verifikasi: d.approval==='Approved' ? 'Yes' : 'No',
       Pax:d.qtyPax||0, Cost_PM89:(d.qtyPax||0)*(d.costPerPax||300000),
       Notice:d.about||'', Keterangan:d.keterangan||''
     }
@@ -4528,6 +4546,7 @@ $('#btnExportExcel').addEventListener('click',()=>{
     STD_Local:'', ETD_Local:'', ATD_Local:'',
     Delay_Menit:'', Delay_HH_MM:'',
     Flight_Status:'', Kategori:'', Approval:'',
+    Verifikasi:'',
     Pax:totalPax, Cost_PM89:totalCost,
     Notice:'', Keterangan:''
   });
@@ -4560,15 +4579,16 @@ $('#btnExportPdf').addEventListener('click',()=>{
       toLocal(d.stdUtc,d.route),toLocal(d.etdUtc,d.route),
       formatHM(d.delayMenit),d.flightStatus||'Delay',
       d.kategori,d.approval||'',
+      d.approval==='Approved'?'Yes':'No',
       d.qtyPax||0,formatRupiah((d.qtyPax||0)*(d.costPerPax||300000))
     ]);
   // total
   const totalPax = filtered.reduce((s,d)=>s+(d.qtyPax||0),0);
   const totalCost = filtered.reduce((s,d)=>s+((d.qtyPax||0)*(d.costPerPax||300000)),0);
-  body.push(['','','TOTAL','','','','','','','',totalPax,formatRupiah(totalCost)]);
+  body.push(['','','TOTAL','','','','','','','','',totalPax,formatRupiah(totalCost)]);
   doc.autoTable({
     startY:65,
-    head:[['No','DATE','Flight','Route','STD (Local)','ETD (Local)','Delay','Status','Kat.','Approval','Pax','Cost PM89']],
+    head:[['No','DATE','Flight','Route','STD (Local)','ETD (Local)','Delay','Status','Kat.','Approval','Verifikasi','Pax','Cost PM89']],
     body:body,
     styles:{fontSize:7},
     headStyles:{fillColor:[29,78,216]},
@@ -6066,9 +6086,9 @@ let _cloudPullInProgress = false;
     try {
       const allData = {
         data: JSON.parse(localStorage.getItem('sjn_delays_v4')||'[]'),
-        stations: JSON.parse(localStorage.getItem('sjnam_stations_v1')||'[]'),
-        dfsData: JSON.parse(localStorage.getItem('sjn_dfs_v1')||'[]'),
-        settings: JSON.parse(localStorage.getItem('sjnam_settings_v1')||'{}'),
+        stations: JSON.parse(localStorage.getItem('sjn_stations_v2')||'[]'),
+        dfsData: JSON.parse(localStorage.getItem('sjn_dfs_bank_v1')||'[]'),
+        settings: JSON.parse(localStorage.getItem('sjn_settings_v4')||'{}'),
         users: JSON.parse(localStorage.getItem('sjnam_users_v1')||'[]'),
         stcrData: JSON.parse(localStorage.getItem('sjnam_stcr_data_v1')||'[]'),
         exportDate: now.toISOString(),
@@ -8431,7 +8451,7 @@ function renderCertificate(p, prefix){
   function getLocalDelay(stdUtc, route){
     if(!stdUtc || !route) return '-';
     const origin = route.substring(0,3);
-    const stations = JSON.parse(localStorage.getItem('sjn_stations_v1') || '[]');
+    const stations = JSON.parse(localStorage.getItem('sjn_stations_v2') || '[]');
     const station = stations.find(s=>s.code===origin);
     const offset = station ? (station.utcOffset || 7) : 7;
     const now = new Date();
@@ -9193,13 +9213,17 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
 
   function monthFromDate(dateStr) {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return isNaN(d) ? '' : MONTHS[d.getMonth()];
+    // Parse manual sebagai komponen lokal (hindari shifting tanggal di timezone UTC negatif)
+    const parts = String(dateStr).split('-');
+    if(parts.length < 2) return '';
+    const m = parseInt(parts[1], 10);
+    return (m>=1 && m<=12) ? MONTHS[m-1] : '';
   }
   function yearFromDate(dateStr) {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return isNaN(d) ? '' : d.getFullYear();
+    const parts = String(dateStr).split('-');
+    const y = parseInt(parts[0], 10);
+    return isNaN(y) ? '' : y;
   }
   function stationFromRoute(route) {
     if (!route || route.length < 3) return '';
@@ -10053,244 +10077,162 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
     } catch(e){ alert('Gagal export PDF: '+e.message); }
   }
 
-  // Export PDF khusus Dashboard — menampilkan KPI, ringkasan per bulan, per stasiun, dan tabel data
-  // sesuai filter yang aktif (sama persis dengan tampilan dashboard di layar)
-  function stcrExportDashboardPdf(sourceData, filterDesc, filename){
+  // Export PDF khusus Dashboard — menangkap TAMPILAN dashboard (KPI cards + chart)
+  // persis seperti yang terlihat di layar, lalu disusun sebagai gambar ke dalam PDF.
+  async function stcrExportDashboardPdf(filterDesc, filename){
     if(!window.jspdf){ alert('Library jsPDF belum dimuat.'); return; }
+    if(typeof html2canvas === 'undefined'){ alert('Library html2canvas belum dimuat.'); return; }
+    const section = document.getElementById('tab-stcr-dashboard');
+    if(!section){ alert('Tampilan Dashboard STCR tidak ditemukan.'); return; }
+
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
-      const PW = doc.internal.pageSize.getWidth();   // 297mm
-      const PH = doc.internal.pageSize.getHeight();  // 210mm
+      const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const margin = 20;
       const NAVY = [11,30,58];
-      const TEAL = [13,110,138];
-      const GOLD = [232,164,39];
-      const PURPLE = [124,58,237];
-      const GREEN = [22,163,74];
-      const LIGHT = [240,246,250];
 
-      // ── KPI Kalkulasi ───────────────────────────────────────────
-      const total      = sourceData.length;
-      const totalAll   = ALL_DATA.length;
-      const totalSTCR  = sourceData.filter(d=>d.StretcherCase>0).length;
-      const totalPOBbt = sourceData.filter(d=>d['Total POB']>0).reduce((s,d)=>s+d['Total POB'],0);
-      const revenue    = sourceData.filter(d=>d['Price POB']>0).reduce((s,d)=>s+d['Price POB'],0);
-      const sjCount    = sourceData.filter(d=>d.AOC==='SJ').length;
-      const inCount    = sourceData.filter(d=>d.AOC==='IN').length;
-      const onlySTCR   = sourceData.filter(d=>d.Request==='STCR').length;
-      const onlyPOB    = sourceData.filter(d=>d.Request==='POB').length;
-      const bothReq    = sourceData.filter(d=>d.Request==='STCR & POB').length;
-      const pct = n => total ? (n/total*100).toFixed(1)+'%' : '0.0%';
-
-      const fmtRp = v => {
-        if(!v) return 'Rp 0';
-        if(v>=1000000000) return 'Rp '+(v/1000000000).toFixed(2)+' M';
-        if(v>=1000000) return 'Rp '+(v/1000000).toFixed(1)+' jt';
-        return 'Rp '+v.toLocaleString('id-ID');
-      };
-
-      // ── HALAMAN 1: Header + KPI + Ringkasan ─────────────────────
-      // Header banner
+      // ── Header banner ───────────────────────────────────────────
       doc.setFillColor(...NAVY);
-      doc.rect(0, 0, PW, 18, 'F');
-      doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
-      doc.text('STRETCHERCASE & POB — DASHBOARD REPORT', 14, 7);
-      doc.setFontSize(8); doc.setFont('helvetica','normal');
-      doc.text('Sriwijaya Air & NAM Air · Medical Assistance Management', 14, 12);
-      const filterLabel = filterDesc || ' (Semua Data)';
-      doc.text('Filter: '+filterLabel.replace(/[()]/g,'').trim(), 14, 16.5);
-      doc.text('Dicetak: '+new Date().toLocaleString('id-ID'), PW-14, 16.5, {align:'right'});
+      doc.rect(0, 0, W, 56, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(15); doc.setFont('helvetica','bold');
+      doc.text('STRETCHERCASE & POB — DASHBOARD REPORT', W/2, 22, {align:'center'});
+      doc.setFontSize(9); doc.setFont('helvetica','normal');
+      doc.text('Sriwijaya Air & NAM Air · Medical Assistance Management', W/2, 36, {align:'center'});
+      const filterLabel = (filterDesc || ' (Semua Data)').replace(/[()]/g,'').trim();
+      doc.text(`Filter: ${filterLabel} | Dicetak: ${new Date().toLocaleString('id-ID')}`, W/2, 48, {align:'center'});
       doc.setTextColor(0,0,0);
 
-      // ── KPI CARDS (6 kartu, 2 baris × 3) ────────────────────────
-      const kpiData = [
-        { label:'TOTAL REQUEST',    value: String(total),      sub: 'dari '+totalAll+' keseluruhan', color: NAVY },
-        { label:'STRETCHERCASE',    value: String(totalSTCR),  sub: onlySTCR+' hanya STCR · '+bothReq+' STCR+POB', color: PURPLE },
-        { label:'TOTAL POB (BTL)',  value: String(totalPOBbt), sub: onlyPOB+' hanya POB · '+bothReq+' STCR+POB', color: TEAL },
-        { label:'REVENUE POB',      value: fmtRp(revenue),     sub: 'total pendapatan', color: GOLD },
-        { label:'SRIWIJAYA AIR (SJ)',value: String(sjCount),   sub: pct(sjCount)+' dari total request', color: [228,91,43] },
-        { label:'NAM AIR (IN)',     value: String(inCount),    sub: pct(inCount)+' dari total request', color: [43,127,228] },
-      ];
-      const cardW = (PW - 28 - 10) / 3;
-      const cardH = 22;
-      const cardStartY = 22;
-      kpiData.forEach((k, i) => {
-        const col = i % 3;
-        const row = Math.floor(i / 3);
-        const x = 14 + col * (cardW + 5);
-        const y = cardStartY + row * (cardH + 4);
-        // card background
-        doc.setFillColor(...LIGHT);
-        doc.roundedRect(x, y, cardW, cardH, 2, 2, 'F');
-        // color accent bar kiri
-        doc.setFillColor(...k.color);
-        doc.rect(x, y, 3, cardH, 'F');
-        // label
-        doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(100,110,120);
-        doc.text(k.label, x+6, y+5);
-        // value
-        doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(...k.color);
-        doc.text(k.value, x+6, y+14);
-        // sub
-        doc.setFontSize(6.5); doc.setFont('helvetica','normal'); doc.setTextColor(100,110,120);
-        doc.text(k.sub, x+6, y+19.5);
-      });
-      doc.setTextColor(0,0,0);
+      // ── Sembunyikan kontrol UI (filter, tombol export) sebelum capture ──
+      const noprints = section.querySelectorAll('.no-print');
+      noprints.forEach(el=>el.style.display='none');
 
-      // ── RINGKASAN PER BULAN ──────────────────────────────────────
-      const monthMap = {};
-      sourceData.forEach(d=>{
-        const m = d.Month||''; if(!m) return;
-        const y = d.Year||'';
-        const key = y ? y+' '+m : m;
-        if(!monthMap[key]) monthMap[key]={count:0,stcr:0,pob:0,revenue:0,sj:0,inC:0};
-        monthMap[key].count++;
-        if(d.StretcherCase>0) monthMap[key].stcr++;
-        if(d['Total POB']>0) monthMap[key].pob++;
-        if(d['Price POB']>0) monthMap[key].revenue += d['Price POB'];
-        if(d.AOC==='SJ') monthMap[key].sj++;
-        if(d.AOC==='IN') monthMap[key].inC++;
-      });
-      const MONTH_ORDER = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const monthRows = Object.entries(monthMap)
-        .sort((a,b)=>{
-          const [ay,am]=a[0].split(' '); const [by,bm]=b[0].split(' ');
-          const yi = (ay||'0000').localeCompare(by||'0000');
-          if(yi!==0) return yi;
-          return MONTH_ORDER.indexOf(am) - MONTH_ORDER.indexOf(bm);
-        })
-        .map(([key,v],i)=>[i+1, key, v.count, v.stcr, v.pob, v.sj, v.inC, fmtRp(v.revenue)]);
+      const bgColor = document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff';
+      let yPos = 66;
 
-      const summaryStartY = cardStartY + 2*(cardH+4) + 6;
+      try {
+        // Tangkap setiap child langsung dari .stcr-main (KPI grid + baris-baris chart)
+        const mainEl = section.querySelector('.stcr-main') || section;
+        const captureEls = Array.from(mainEl.children).filter(el => !el.classList.contains('no-print'));
 
-      // Ringkasan per bulan (kiri) + per stasiun (kanan) side by side
-      const halfW = (PW - 28 - 8) / 2;
+        for(const el of captureEls){
+          if(!el || el.offsetHeight < 5) continue;
+          try {
+            const canvas = await html2canvas(el, {
+              scale: 1.8,
+              backgroundColor: bgColor,
+              logging: false,
+              useCORS: true
+            });
+            const imgData = canvas.toDataURL('image/jpeg', 0.92);
+            const imgW = W - margin*2;
+            const imgH = (canvas.height / canvas.width) * imgW;
 
-      // Tren per Bulan
-      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...NAVY);
-      doc.text('📈 Tren Request per Bulan', 14, summaryStartY);
-      doc.autoTable({
-        startY: summaryStartY + 2,
-        tableWidth: halfW,
-        margin: { left: 14 },
-        head: [['#','Periode','Total','STCR','POB','SJ','IN','Revenue']],
-        body: monthRows,
-        styles: { fontSize: 6.5, cellPadding: 1.5 },
-        headStyles: { fillColor: NAVY, textColor:255, fontStyle:'bold', fontSize:6.5 },
-        alternateRowStyles: { fillColor: LIGHT },
-        columnStyles: { 7: { cellWidth: 24 } }
-      });
-
-      // Per Stasiun (kanan)
-      const stationMap = {};
-      sourceData.forEach(d=>{
-        const s = d.Station; if(!s) return;
-        if(!stationMap[s]) stationMap[s]={count:0,stcr:0,pob:0,revenue:0};
-        stationMap[s].count++;
-        if(d.StretcherCase>0) stationMap[s].stcr++;
-        if(d['Total POB']>0) stationMap[s].pob++;
-        if(d['Price POB']>0) stationMap[s].revenue += d['Price POB'];
-      });
-      const stRows = Object.entries(stationMap)
-        .sort((a,b)=>b[1].count-a[1].count)
-        .slice(0,20)
-        .map(([s,v],i)=>[i+1, s, v.count, v.stcr, v.pob, fmtRp(v.revenue)]);
-
-      const stationX = 14 + halfW + 8;
-      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(...NAVY);
-      doc.text('🏢 Top Stasiun', stationX, summaryStartY);
-      doc.autoTable({
-        startY: summaryStartY + 2,
-        tableWidth: halfW,
-        margin: { left: stationX },
-        head: [['#','Station','Total','STCR','POB','Revenue']],
-        body: stRows,
-        styles: { fontSize: 6.5, cellPadding: 1.5 },
-        headStyles: { fillColor: NAVY, textColor:255, fontStyle:'bold', fontSize:6.5 },
-        alternateRowStyles: { fillColor: LIGHT },
-        columnStyles: { 5: { cellWidth: 24 } }
-      });
-
-      doc.setTextColor(0,0,0);
-
-      // ── HALAMAN 2: Tabel Detail Data ─────────────────────────────
-      doc.addPage();
-      doc.setFillColor(...NAVY);
-      doc.rect(0, 0, PW, 14, 'F');
-      doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
-      doc.text('DETAIL DATA REQUEST'+filterDesc, 14, 9);
-      doc.setTextColor(0,0,0);
-
-      const tableData = sourceData.map((d,i)=>[
-        i+1,
-        d['Date of Flight']||'',
-        d['App Service & Tehnik']||'',
-        d.AOC||'',
-        d.Request||'',
-        d['Flight No']||'',
-        d.Route||'',
-        d['Nama Pasien']||'',
-        d.StretcherCase>0?'✓':'—',
-        d['Total POB']||'—',
-        d['Price POB']?(+d['Price POB']).toLocaleString('id-ID'):'—',
-        d.Station||''
-      ]);
-
-      doc.autoTable({
-        startY: 17,
-        head: [['#','Tgl Flight','No.Req','AOC','Request','Flight No','Route','Pasien','STCR','POB','Revenue (Rp)','Station']],
-        body: tableData,
-        styles: { fontSize: 6.5, cellPadding: 1.5 },
-        headStyles: { fillColor: NAVY, textColor:255, fontStyle:'bold', fontSize:6.5 },
-        alternateRowStyles: { fillColor: LIGHT },
-        didDrawPage: (data) => {
-          // footer setiap halaman
-          doc.setFontSize(7); doc.setFont('helvetica','normal'); doc.setTextColor(150,150,150);
-          doc.text('STCR Dashboard Report — '+new Date().toLocaleDateString('id-ID'), 14, PH-4);
-          doc.text('Hal '+doc.internal.getCurrentPageInfo().pageNumber, PW-14, PH-4, {align:'right'});
-          doc.setTextColor(0,0,0);
+            if(yPos + imgH > H - 30){
+              doc.addPage();
+              yPos = margin;
+            }
+            doc.addImage(imgData, 'JPEG', margin, yPos, imgW, imgH);
+            yPos += imgH + 8;
+          } catch(e2){
+            console.warn('STCR Dashboard block capture error:', e2);
+          }
         }
-      });
+      } finally {
+        // Kembalikan tampilan UI seperti semula
+        noprints.forEach(el=>el.style.display='');
+      }
+
+      // ── Footer & nomor halaman di setiap halaman ─────────────────
+      const totalPages = doc.getNumberOfPages();
+      for(let i=1;i<=totalPages;i++){
+        doc.setPage(i);
+        doc.setFontSize(8); doc.setTextColor(148,163,184);
+        doc.text(`STCR Dashboard Report — ${new Date().toLocaleDateString('id-ID')}`, margin, H-12);
+        doc.text(`Hal ${i} / ${totalPages}`, W-margin, H-12, {align:'right'});
+        doc.setTextColor(0,0,0);
+      }
 
       doc.save(filename);
     } catch(e){ alert('Gagal export Dashboard PDF: '+e.message); console.error(e); }
   }
 
-  function stcrExportStationPdf(filename, filterDesc){
+  // Export PDF khusus Station — menangkap TAMPILAN grid per-stasiun persis di layar
+  async function stcrExportStationPdf(filename, filterDesc){
     if(!window.jspdf){ alert('Library jsPDF belum dimuat.'); return; }
+    if(typeof html2canvas === 'undefined'){ alert('Library html2canvas belum dimuat.'); return; }
+    const section = document.getElementById('tab-stcr-station');
+    if(!section){ alert('Tampilan Station STCR tidak ditemukan.'); return; }
+
     try {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-      const periodLabel = filterDesc || '';
-      doc.setFontSize(14); doc.setFont('helvetica','bold');
-      doc.text('STCR Dashboard — Per Stasiun'+periodLabel, 14, 14);
-      doc.setFontSize(9); doc.setFont('helvetica','normal');
-      doc.text('Dicetak: '+new Date().toLocaleString('id-ID'), 14, 20);
+      const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:'a4' });
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const margin = 20;
+      const NAVY = [11,30,58];
 
-      const stMap = {};
-      getStationFiltered().forEach(d=>{
-        const s = d.Station; if(!s) return;
-        if(!stMap[s]) stMap[s]={count:0,stcr:0,pob:0,revenue:0,sj:0,inC:0};
-        stMap[s].count++;
-        if((d.AOC||'').toUpperCase()==='SJ') stMap[s].sj++;
-        if((d.AOC||'').toUpperCase()==='IN') stMap[s].inC++;
-        if(d.StretcherCase>0) stMap[s].stcr++;
-        if(d['Total POB']>0) stMap[s].pob++;
-        stMap[s].revenue += (d['Price POB']>0?d['Price POB']:0);
-      });
-      const rows = Object.entries(stMap).sort((a,b)=>b[1].count-a[1].count).map(([s,v],i)=>[
-        i+1, s, v.count, v.stcr, v.pob, v.sj, v.inC, v.revenue?(+v.revenue).toLocaleString('id-ID'):'—'
-      ]);
-      doc.autoTable({
-        startY: 24,
-        head: [['#','Station','Total Req','STCR','POB','SJ','IN','Revenue (Rp)']],
-        body: rows,
-        styles: { fontSize: 8, cellPadding: 2 },
-        headStyles: { fillColor: [11,30,58], textColor:255, fontStyle:'bold' },
-        alternateRowStyles: { fillColor: [240,246,250] }
-      });
+      // ── Header banner ───────────────────────────────────────────
+      doc.setFillColor(...NAVY);
+      doc.rect(0, 0, W, 50, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(15); doc.setFont('helvetica','bold');
+      doc.text('STRETCHERCASE & POB — PER STASIUN', W/2, 22, {align:'center'});
+      doc.setFontSize(9); doc.setFont('helvetica','normal');
+      const periodLabel = (filterDesc || ' (Semua Periode)').replace(/[()]/g,'').trim();
+      doc.text(`Filter: ${periodLabel} | Dicetak: ${new Date().toLocaleString('id-ID')}`, W/2, 38, {align:'center'});
+      doc.setTextColor(0,0,0);
+
+      const noprints = section.querySelectorAll('.no-print');
+      noprints.forEach(el=>el.style.display='none');
+
+      const bgColor = document.documentElement.classList.contains('dark') ? '#1e293b' : '#ffffff';
+      let yPos = 60;
+
+      try {
+        const mainEl = section.querySelector('.stcr-main') || section;
+        const captureEls = Array.from(mainEl.children).filter(el => !el.classList.contains('no-print'));
+
+        for(const el of captureEls){
+          if(!el || el.offsetHeight < 5) continue;
+          try {
+            const canvas = await html2canvas(el, {
+              scale: 1.8,
+              backgroundColor: bgColor,
+              logging: false,
+              useCORS: true
+            });
+            const imgData = canvas.toDataURL('image/jpeg', 0.92);
+            const imgW = W - margin*2;
+            const imgH = (canvas.height / canvas.width) * imgW;
+
+            if(yPos + imgH > H - 30){
+              doc.addPage();
+              yPos = margin;
+            }
+            doc.addImage(imgData, 'JPEG', margin, yPos, imgW, imgH);
+            yPos += imgH + 8;
+          } catch(e2){
+            console.warn('STCR Station block capture error:', e2);
+          }
+        }
+      } finally {
+        noprints.forEach(el=>el.style.display='');
+      }
+
+      const totalPages = doc.getNumberOfPages();
+      for(let i=1;i<=totalPages;i++){
+        doc.setPage(i);
+        doc.setFontSize(8); doc.setTextColor(148,163,184);
+        doc.text(`STCR Station Report — ${new Date().toLocaleDateString('id-ID')}`, margin, H-12);
+        doc.text(`Hal ${i} / ${totalPages}`, W-margin, H-12, {align:'right'});
+        doc.setTextColor(0,0,0);
+      }
+
       doc.save(filename);
-    } catch(e){ alert('Gagal export PDF: '+e.message); }
+    } catch(e){ alert('Gagal export Station PDF: '+e.message); console.error(e); }
   }
 
   // Wire up export buttons after DOM ready
@@ -10312,10 +10254,10 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
       stcrExportExcelData(filteredDash, 'STCR Dashboard', 'STCR_Dashboard_'+new Date().toISOString().slice(0,10)+'.xlsx');
     });
     const dashPdfBtn = $id('btnStcrDashExportPdf');
-    if(dashPdfBtn) dashPdfBtn.addEventListener('click', ()=>{
-      const filteredDash = getFiltered();
+    if(dashPdfBtn) dashPdfBtn.addEventListener('click', async ()=>{
       const filterDesc = buildFilterLabel(['stcr-f-year','stcr-f-month','stcr-f-aoc','stcr-f-req','stcr-f-station']);
-      stcrExportDashboardPdf(filteredDash, filterDesc, 'STCR_Dashboard_'+new Date().toISOString().slice(0,10)+'.pdf');
+      if(typeof showToast==='function') showToast('⏳ Menyiapkan PDF Dashboard STCR…','info');
+      await stcrExportDashboardPdf(filterDesc, 'STCR_Dashboard_'+new Date().toISOString().slice(0,10)+'.pdf');
     });
 
     // Data Request exports (export filtered data)
@@ -10337,8 +10279,9 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
       stcrExportStationExcel('STCR_PerStasiun_'+new Date().toISOString().slice(0,10)+'.xlsx');
     });
     const stPdfBtn = $id('btnStcrStationExportPdf');
-    if(stPdfBtn) stPdfBtn.addEventListener('click', ()=>{
-      stcrExportStationPdf('STCR_PerStasiun_'+new Date().toISOString().slice(0,10)+'.pdf', buildFilterLabel(['stcr-st-year','stcr-st-month']));
+    if(stPdfBtn) stPdfBtn.addEventListener('click', async ()=>{
+      if(typeof showToast==='function') showToast('⏳ Menyiapkan PDF Station STCR…','info');
+      await stcrExportStationPdf('STCR_PerStasiun_'+new Date().toISOString().slice(0,10)+'.pdf', buildFilterLabel(['stcr-st-year','stcr-st-month']));
     });
   }
 

@@ -4494,8 +4494,12 @@ function handleTableClick(e){
   }
   if(e.target.dataset.del){
     const id=parseInt(e.target.dataset.del);
-    showConfirm('Hapus Data',`Hapus data flight ${data.find(d=>d.id===id)?.flightNumber||''}?`).then(ok=>{
-      if(ok){data=data.filter(d=>d.id!==id);saveData();renderTable();showToast('Data dihapus');}
+    const item = data.find(d=>d.id===id);
+    showConfirm('Hapus Data',`Hapus data flight ${item?.flightNumber||''}?`).then(ok=>{
+      if(ok){
+        if(typeof window.pushUndo === 'function') window.pushUndo(`Hapus data ${item ? (item.flightNumber||item.id) : id}`, data);
+        data=data.filter(d=>d.id!==id);saveData();renderTable();showToast('Data dihapus');
+      }
     });
   }
 }
@@ -4620,7 +4624,10 @@ $('#fileImportJson').addEventListener('change',async e=>{
 $('#btnHapusSemua').addEventListener('click',async()=>{
   if(window.currentUserReadOnly){ showToast('Akses ditolak: mode read-only','error'); return; }
   const ok=await showConfirm('Hapus Semua','Semua data delay akan dihapus permanen!');
-  if(ok){data=[];saveData();renderTable();showToast('Semua data dihapus');}
+  if(ok){
+    if(data.length>0 && typeof window.pushUndo === 'function') window.pushUndo(`Hapus Semua Data (${data.length} record)`, data);
+    data=[];saveData();renderTable();showToast('Semua data dihapus');
+  }
 });
 
 // =================================================================
@@ -5892,7 +5899,29 @@ function getAllCloudData(){
   try { users = JSON.parse(localStorage.getItem('sjnam_users_v1') || 'null'); } catch(e){}
   let stcrData = null;
   try { stcrData = JSON.parse(localStorage.getItem('sjnam_stcr_data_v1') || 'null'); } catch(e){}
-  return { data, stations, dfsData, settings, training, users, stcrData, savedAt: new Date().toISOString(), version: 'v4.1' };
+  // Hak akses per-role (Co-Admin/User/Peserta)
+  let rolePerms = null;
+  try { rolePerms = JSON.parse(localStorage.getItem('sjnam_role_perms_v1') || 'null'); } catch(e){}
+  // Template sertifikat (gambar dataURL) — Template 1 (Sriwijaya Air) & Template 2 (NAM Air)
+  let certTemplate1 = null;
+  try { certTemplate1 = JSON.parse(localStorage.getItem('sjn_cert_template_1') || 'null'); } catch(e){}
+  let certTemplate2 = null;
+  try { certTemplate2 = JSON.parse(localStorage.getItem('sjn_cert_template_2') || 'null'); } catch(e){}
+  const certTemplateActive = localStorage.getItem('sjn_cert_template_active') || null;
+  // Posisi elemen draggable di kanvas sertifikat
+  let certPositions = null;
+  try { certPositions = JSON.parse(localStorage.getItem('sjn_cert_positions_v1') || 'null'); } catch(e){}
+  // Toggle tampil/sembunyi barcode pada sertifikat
+  const certBarcode = localStorage.getItem('sjn_cert_barcode_v1');
+  // Custom text block tambahan pada sertifikat
+  let certCustomTexts = null;
+  try { certCustomTexts = JSON.parse(localStorage.getItem('sjn_cert_custom_texts_v1') || 'null'); } catch(e){}
+
+  return {
+    data, stations, dfsData, settings, training, users, stcrData,
+    rolePerms, certTemplate1, certTemplate2, certTemplateActive, certPositions, certBarcode, certCustomTexts,
+    savedAt: new Date().toISOString(), version: 'v4.2'
+  };
 }
 
 // UPLOAD ke Supabase (upsert dengan record_id = 'sjnam_main')
@@ -5972,6 +6001,24 @@ async function cloudPull(silent = false){
         if(typeof window.STCR.applyFilters === 'function') window.STCR.applyFilters();
       }
     }
+    // Restore hak akses per-role
+    if(rec.rolePerms){
+      localStorage.setItem('sjnam_role_perms_v1', JSON.stringify(rec.rolePerms));
+      if(typeof window.renderPermTable === 'function') window.renderPermTable();
+      if(typeof applyPermissions === 'function') applyPermissions();
+    }
+    // Restore template & elemen sertifikat (gambar, posisi, toggle barcode, custom text)
+    let certChanged = false;
+    if(rec.certTemplate1){ localStorage.setItem('sjn_cert_template_1', JSON.stringify(rec.certTemplate1)); certChanged = true; }
+    if(rec.certTemplate2){ localStorage.setItem('sjn_cert_template_2', JSON.stringify(rec.certTemplate2)); certChanged = true; }
+    if(rec.certTemplateActive){ localStorage.setItem('sjn_cert_template_active', rec.certTemplateActive); certChanged = true; }
+    if(rec.certPositions){ localStorage.setItem('sjn_cert_positions_v1', JSON.stringify(rec.certPositions)); certChanged = true; }
+    if(rec.certBarcode !== undefined && rec.certBarcode !== null){ localStorage.setItem('sjn_cert_barcode_v1', rec.certBarcode); certChanged = true; }
+    if(rec.certCustomTexts){ localStorage.setItem('sjn_cert_custom_texts_v1', JSON.stringify(rec.certCustomTexts)); certChanged = true; }
+    if(certChanged){
+      if(typeof window.loadCertificateTemplate === 'function') window.loadCertificateTemplate();
+      if(typeof window.ctbRenderAll === 'function') window.ctbRenderAll();
+    }
     _cloudPullInProgress = false;
 
     renderTable();
@@ -6047,6 +6094,24 @@ function startRealtimeSubscription(){
             if(typeof window.STCR.applyFilters === 'function') window.STCR.applyFilters();
           }
         }
+        // Restore hak akses per-role dari realtime
+        if(rec.rolePerms){
+          localStorage.setItem('sjnam_role_perms_v1', JSON.stringify(rec.rolePerms));
+          if(typeof window.renderPermTable === 'function') window.renderPermTable();
+          if(typeof applyPermissions === 'function') applyPermissions();
+        }
+        // Restore template & elemen sertifikat dari realtime
+        let certChangedRt = false;
+        if(rec.certTemplate1){ localStorage.setItem('sjn_cert_template_1', JSON.stringify(rec.certTemplate1)); certChangedRt = true; }
+        if(rec.certTemplate2){ localStorage.setItem('sjn_cert_template_2', JSON.stringify(rec.certTemplate2)); certChangedRt = true; }
+        if(rec.certTemplateActive){ localStorage.setItem('sjn_cert_template_active', rec.certTemplateActive); certChangedRt = true; }
+        if(rec.certPositions){ localStorage.setItem('sjn_cert_positions_v1', JSON.stringify(rec.certPositions)); certChangedRt = true; }
+        if(rec.certBarcode !== undefined && rec.certBarcode !== null){ localStorage.setItem('sjn_cert_barcode_v1', rec.certBarcode); certChangedRt = true; }
+        if(rec.certCustomTexts){ localStorage.setItem('sjn_cert_custom_texts_v1', JSON.stringify(rec.certCustomTexts)); certChangedRt = true; }
+        if(certChangedRt){
+          if(typeof window.loadCertificateTemplate === 'function') window.loadCertificateTemplate();
+          if(typeof window.ctbRenderAll === 'function') window.ctbRenderAll();
+        }
         _cloudPullInProgress = false;
         renderTable();
         renderDashboard();
@@ -6085,7 +6150,7 @@ let _cloudPullInProgress = false;
     // 1. Export JSON lokal
     try {
       const allData = {
-        data: JSON.parse(localStorage.getItem('sjn_delays_v4')||'[]'),
+        data: JSON.parse(localStorage.getItem('sjn_delay_pro_v4')||'[]'),
         stations: JSON.parse(localStorage.getItem('sjn_stations_v2')||'[]'),
         dfsData: JSON.parse(localStorage.getItem('sjn_dfs_bank_v1')||'[]'),
         settings: JSON.parse(localStorage.getItem('sjn_settings_v4')||'{}'),
@@ -7865,6 +7930,7 @@ function renderCertificate(p, prefix){
     localStorage.setItem(TEMPLATE_KEY1, JSON.stringify({dataUrl, savedAt: Date.now()}));
     localStorage.setItem(TEMPLATE_ACTIVE, '1');
     loadCertificateTemplate();
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
     showToast('Template 1 disimpan & aktif','success');
   });
   document.getElementById('btnSaveTemplate2')?.addEventListener('click', ()=>{
@@ -7873,18 +7939,21 @@ function renderCertificate(p, prefix){
     localStorage.setItem(TEMPLATE_KEY2, JSON.stringify({dataUrl, savedAt: Date.now()}));
     localStorage.setItem(TEMPLATE_ACTIVE, '2');
     loadCertificateTemplate();
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
     showToast('Template 2 disimpan & aktif','success');
   });
   document.getElementById('btnUseTemplate1')?.addEventListener('click', ()=>{
     if(!localStorage.getItem(TEMPLATE_KEY1)) return showToast('Template 1 belum ada','error');
     localStorage.setItem(TEMPLATE_ACTIVE, '1');
     loadCertificateTemplate();
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
     showToast('Template 1 diaktifkan','success');
   });
   document.getElementById('btnUseTemplate2')?.addEventListener('click', ()=>{
     if(!localStorage.getItem(TEMPLATE_KEY2)) return showToast('Template 2 belum ada','error');
     localStorage.setItem(TEMPLATE_ACTIVE, '2');
     loadCertificateTemplate();
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
     showToast('Template 2 diaktifkan','success');
   });
   
@@ -7903,10 +7972,12 @@ function renderCertificate(p, prefix){
     sessionStorage.removeItem('temp_'+TEMPLATE_KEY1);
     sessionStorage.removeItem('temp_'+TEMPLATE_KEY2);
     loadCertificateTemplate();
-    showToast('Template direset ke default','success');
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
+    showToast('Template direset ke default (perangkat ini saja — perangkat lain tidak ikut ter-reset)','success');
   });
   document.getElementById('toggleBarcode')?.addEventListener('change', (e)=>{
     localStorage.setItem(BARCODE_KEY, e.target.checked ? '1' : '0');
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
     showToast('Barcode ' + (e.target.checked ? 'diaktifkan ✅' : 'dimatikan'), e.target.checked ? 'success' : 'info');
     // Force re-render of current certificate to apply barcode toggle
     if(window.lastCertData){
@@ -8026,6 +8097,7 @@ function renderCertificate(p, prefix){
       });
     });
     localStorage.setItem(POS_KEY, JSON.stringify(pos));
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
   }
 
   function loadPositions(){
@@ -8068,6 +8140,7 @@ function renderCertificate(p, prefix){
       makeDraggable(document.getElementById(id), {resizeMode:'box'});
     });
   }
+  window.loadPositions = loadPositions; // ekspor agar cloud sync bisa re-apply posisi setelah pull
 
   // init
   setTimeout(()=>{
@@ -8653,7 +8726,7 @@ window.addEventListener('beforeunload', ()=>{
   function loadPerms(){
     try { return JSON.parse(localStorage.getItem(PERM_KEY)) || null; } catch(e){ return null; }
   }
-  function savePerms(p){ localStorage.setItem(PERM_KEY, JSON.stringify(p)); }
+  function savePerms(p){ localStorage.setItem(PERM_KEY, JSON.stringify(p)); if(typeof triggerAutoSync === 'function') triggerAutoSync(); }
   function getDefaultPerms(){
     const p = {};
     FEATURES.forEach(f=>{ p[f.id] = {...f.def}; });
@@ -9047,12 +9120,11 @@ window.addEventListener('beforeunload', ()=>{
       showToast('Tidak ada aksi yang bisa di-Undo', 'error');
       return;
     }
-    // Restore data
+    // Restore ke variabel `data` yang sesungguhnya dipakai aplikasi (bukan key lain)
     try {
-      const DB = 'sjn_delays_v4';
-      localStorage.setItem(DB, JSON.stringify(entry.data));
-      if(typeof renderData === 'function') renderData();
-      else if(typeof window.renderData === 'function') window.renderData();
+      data = entry.data;
+      saveData();
+      renderTable();
       showToast(`↩ Undo berhasil: "${entry.description}"`, 'success');
     } catch(ex){
       showToast('Undo gagal: ' + ex.message, 'error');
@@ -9060,49 +9132,12 @@ window.addEventListener('beforeunload', ()=>{
     updateUndoUI();
   });
 
-  // PATCH: intercept delete actions to push undo
-  const _waitDelete = setInterval(()=>{
-    if(typeof window.deleteRow !== 'function' && typeof window.hapusData !== 'function') return;
-    clearInterval(_waitDelete);
-
-    // Patch deleteRow if exists
-    if(typeof window.deleteRow === 'function'){
-      const _origDelete = window.deleteRow;
-      window.deleteRow = function(id){
-        const DB = 'sjn_delays_v4';
-        const current = JSON.parse(localStorage.getItem(DB) || '[]');
-        const item = current.find(r=>r.id===id);
-        window.pushUndo(`Hapus data ${item ? item.flightNo || item.id : id}`, current);
-        return _origDelete.apply(this, arguments);
-      };
-    }
-
-    // Patch hapusData / btnHapusSemua
-    const btnHapus = document.getElementById('btnHapusSemua');
-    if(btnHapus){
-      btnHapus.addEventListener('click', function(){
-        const DB = 'sjn_delays_v4';
-        const current = JSON.parse(localStorage.getItem(DB) || '[]');
-        if(current.length > 0) window.pushUndo(`Hapus Semua Data (${current.length} record)`, current);
-      }, true); // capture phase to run before other handlers
-    }
-  }, 500);
-
-  // Also patch single-delete buttons via event delegation
-  document.addEventListener('click', function(e){
-    // Detect delete button clicks in data table
-    const delBtn = e.target.closest('[data-del-id], .btn-del-row, [onclick*="deleteRow"], [onclick*="hapusRow"]');
-    if(!delBtn) return;
-    const DB = 'sjn_delays_v4';
-    const current = JSON.parse(localStorage.getItem(DB) || '[]');
-    if(current.length > 0){
-      // Try to get flight info
-      const idMatch = (delBtn.getAttribute('onclick')||'').match(/\d+/);
-      const id = idMatch ? idMatch[0] : null;
-      const item = id ? current.find(r=>String(r.id)===id) : null;
-      window.pushUndo(`Hapus data ${item ? (item.flightNo || item.id) : 'record'}`, current);
-    }
-  }, true);
+  // Catatan: push undo dilakukan langsung di titik penghapusan sesungguhnya
+  // (lihat handleTableClick untuk hapus per-baris, dan handler #btnHapusSemua
+  // untuk hapus semua) — bukan lewat patch fungsi terpisah, karena fungsi
+  // window.deleteRow / window.hapusData yang coba di-patch sebelumnya
+  // tidak pernah ada di aplikasi ini (penghapusan ditangani lewat
+  // event delegation pada atribut data-del).
 
 })();
 
@@ -10314,6 +10349,7 @@ const STCR_SEED_DATA = [{"Date of Request": "", "Date of Flight": "2024-01-03", 
   // ----- Persistensi -----
   function saveBlocks(){
     try { localStorage.setItem(CTB_KEY, JSON.stringify(blocks)); } catch(e){}
+    if(typeof triggerAutoSync === 'function') triggerAutoSync();
   }
   function loadBlocks(){
     try {

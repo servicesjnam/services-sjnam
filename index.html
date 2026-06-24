@@ -6020,7 +6020,7 @@ function startRealtimeSubscription(){
 
   _realtimeChannel = sb
     .channel('sjnam_sync_channel')
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sjnam_sync', filter: 'id=eq.sjnam_main' },
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sjnam_sync', filter: 'id=eq.sjnam_main' },
       async (payload) => {
         if(_cloudPullInProgress) return;
         const rec = payload.new?.payload;
@@ -8503,9 +8503,17 @@ window.addEventListener('error', function(e){
 </script>
 
 <script>
-// cleanup intervals on unload
+// cleanup intervals on unload + flush perubahan yang masih tertunda (debounce)
+// supaya data tidak hilang/gagal ter-sync ke device lain saat tab ditutup cepat
 window.addEventListener('beforeunload', ()=>{
-  if(window.autoSyncTimer) clearTimeout(window.autoSyncTimer);
+  if(typeof _autoSyncTimer !== 'undefined' && _autoSyncTimer){
+    clearTimeout(_autoSyncTimer);
+    // Push langsung (silent) — upaya terakhir agar perubahan tidak hilang.
+    // Browser tidak menjamin promise async selesai saat unload, tapi
+    // fetch yang sudah terkirim oleh Supabase client umumnya tetap diproses
+    // selama belum unload sepenuhnya (best-effort).
+    if(typeof cloudPush === 'function') cloudPush(true);
+  }
 });
 
 
